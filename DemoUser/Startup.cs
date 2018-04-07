@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using DemoUser.Infrastructure;
 using DemoUser.Models;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -25,16 +26,21 @@ namespace DemoUser
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            //注入自定义密码验证类
+            services.AddTransient<IPasswordValidator<AppUser>,
+                CustomPasswordValidator>();
+            
             services.AddDbContext<AppIdentityDbContext>(options =>
                 options.UseSqlServer(
                     Configuration["Data:AppStoreIdentity:ConnectionString"]));
-            services.AddIdentity<AppUser, IdentityRole>(opt =>
-                {
-                    opt.Password.RequireLowercase = false;
-                    opt.Password.RequireUppercase = false;
-                    opt.Password.RequireNonAlphanumeric = false;
-                })
-                .AddEntityFrameworkStores<AppIdentityDbContext>()
+            //配置密码强度
+            services.AddIdentity<AppUser, IdentityRole>(opts => {
+                    opts.Password.RequiredLength = 6;
+                    opts.Password.RequireNonAlphanumeric = false;
+                    opts.Password.RequireLowercase = false;
+                    opts.Password.RequireUppercase = false;
+                    opts.Password.RequireDigit = false;
+                }).AddEntityFrameworkStores<AppIdentityDbContext>()
                 .AddDefaultTokenProviders();
             services.AddMvc();
         }
