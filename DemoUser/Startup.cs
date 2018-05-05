@@ -26,6 +26,10 @@ namespace DemoUser
         // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
         public void ConfigureServices(IServiceCollection services)
         {
+            //注入自定义用户名验证类
+            services.AddTransient<IUserValidator<AppUser>,
+                CustomUserValidator>();
+
             //注入自定义密码验证类
             services.AddTransient<IPasswordValidator<AppUser>,
                 CustomPasswordValidator>();
@@ -33,8 +37,12 @@ namespace DemoUser
             services.AddDbContext<AppIdentityDbContext>(options =>
                 options.UseSqlServer(
                     Configuration["Data:AppStoreIdentity:ConnectionString"]));
-            //配置密码强度
+            //配置
             services.AddIdentity<AppUser, IdentityRole>(opts => {
+                    //配置用户名验证规则
+                    opts.User.RequireUniqueEmail = true;
+                    opts.User.AllowedUserNameCharacters = "testabc";
+                    //配置密码强度
                     opts.Password.RequiredLength = 6;
                     opts.Password.RequireNonAlphanumeric = false;
                     opts.Password.RequireLowercase = false;
